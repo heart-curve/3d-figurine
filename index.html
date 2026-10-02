@@ -3,248 +3,307 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Figurine Studio | 3D Interactive Showcase</title>
-
-  <!-- Google Model Viewer Library -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
-
+  <title>Figurine Studio | Duo-Tone Lighting</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
-      background-color: #0f1115;
+      background: #090a0f;
       color: #e0e0e0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height: 100vh;
       overflow: hidden;
-      display: flex;
+      height: 100vh;
+      width: 100vw;
     }
-
-    /* 3D Stage */
-    #stage-container {
-      flex: 1;
-      position: relative;
-      height: 100%;
-    }
-
-    model-viewer {
+    #canvas-container {
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 50% 50%, #20242d 0%, #0d0f13 100%);
+      position: absolute;
+      top: 0;
+      left: 0;
     }
-
-    /* Control Panel (Glassmorphism look) */
+    /* Sleek Floating Controls */
     #ui-panel {
       position: absolute;
       top: 20px;
       right: 20px;
-      width: 280px;
-      background: rgba(22, 27, 34, 0.75);
+      width: 300px;
+      background: rgba(15, 17, 23, 0.85);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      padding: 18px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 10;
     }
-
     h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      color: #ffffff;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
-
     .control-group {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-
     label {
       font-size: 0.8rem;
+      color: #94a3b8;
       display: flex;
       justify-content: space-between;
-      color: #a0a6b2;
     }
-
     input[type="range"] {
       width: 100%;
-      accent-color: #3b82f6;
       cursor: pointer;
     }
-
-    /* Preset Buttons */
-    .button-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-
-    button, .file-btn {
-      background: #252d3a;
-      color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      font-weight: 500;
-      text-align: center;
-      transition: background 0.2s;
-    }
-
-    button:hover, .file-btn:hover {
-      background: #374151;
-    }
-
-    /* Model Loader Button */
-    .file-btn {
-      display: block;
-      background: #2563eb;
+    input[type="color"] {
       border: none;
+      background: transparent;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+    .file-btn {
+      background: #3b82f6;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
     }
     .file-btn:hover {
-      background: #1d4ed8;
+      background: #2563eb;
     }
-
-    #file-input {
-      display: none;
-    }
-
-    /* Branding Badge */
+    #file-input { display: none; }
     #badge {
       position: absolute;
       bottom: 20px;
       left: 20px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #64748b;
       pointer-events: none;
+      z-index: 10;
     }
   </style>
+
+  <!-- Import Three.js via ES Module Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
 
-  <div id="stage-container">
-    <!-- The Model Viewer Component -->
-    <model-viewer
-      id="studio-stage"
-      src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-      ar
-      ar-modes="webxr scene-viewer quick-look"
-      camera-controls
-      tone-mapping="neutral"
-      shadow-intensity="1"
-      shadow-softness="0.5"
-      exposure="1.0"
-      environment-image="neutral"
-      alt="3D Figurine"
-    ></model-viewer>
+  <div id="canvas-container"></div>
+  <div id="badge">Click + Drag: Orbit &bull; Right-Click: Pan &bull; Scroll: Zoom</div>
 
-    <div id="badge">Studio Stage &bull; Rotate: Click + Drag &bull; Zoom: Scroll</div>
-  </div>
-
-  <!-- Real-Time Lighting UI Controls -->
   <div id="ui-panel">
-    <h2>Lighting Studio</h2>
+    <h2>Signature Lighting</h2>
 
+    <!-- Left Light (Purple) -->
     <div class="control-group">
-      <label>Exposure (Light Power) <span id="exposure-val">1.0</span></label>
-      <input id="exposure-slider" type="range" min="0.2" max="2.5" step="0.1" value="1.0" />
+      <div class="color-row">
+        <label>Left Light (Violet)</label>
+        <input type="color" id="left-color" value="#a855f7" />
+      </div>
+      <input type="range" id="left-intensity" min="0" max="15" step="0.2" value="6" />
     </div>
 
+    <!-- Right Light (Green) -->
     <div class="control-group">
-      <label>Shadow Intensity <span id="shadow-val">1.0</span></label>
-      <input id="shadow-slider" type="range" min="0.0" max="2.0" step="0.1" value="1.0" />
+      <div class="color-row">
+        <label>Right Light (Emerald)</label>
+        <input type="color" id="right-color" value="#22c55e" />
+      </div>
+      <input type="range" id="right-intensity" min="0" max="15" step="0.2" value="6" />
     </div>
 
+    <!-- Light Rotation -->
     <div class="control-group">
-      <label>Light Angle</label>
-      <input id="light-angle-slider" type="range" min="0" max="360" step="1" value="0" />
+      <label>Rig Rotation (Orbit Lights)</label>
+      <input type="range" id="rig-rotation" min="0" max="360" step="1" value="0" />
     </div>
 
-    <h2>Mood Presets</h2>
-    <div class="button-row">
-      <button onclick="applyPreset('dramatic')">Moody Studio</button>
-      <button onclick="applyPreset('bright')">Bright Exhibit</button>
+    <!-- Ambient / Exposure -->
+    <div class="control-group">
+      <label>Ambient Fill Light</label>
+      <input type="range" id="ambient-intensity" min="0" max="2" step="0.05" value="0.3" />
     </div>
 
-    <h2>Load Figurine</h2>
-    <label for="file-input" class="file-btn">Choose Local .GLB File</label>
+    <h2>Model</h2>
+    <label for="file-input" class="file-btn">Load Custom .GLB Figurine</label>
     <input type="file" id="file-input" accept=".glb,.gltf" />
   </div>
 
-  <script>
-    const stage = document.getElementById("studio-stage");
-    const exposureSlider = document.getElementById("exposure-slider");
-    const shadowSlider = document.getElementById("shadow-slider");
-    const lightAngleSlider = document.getElementById("light-angle-slider");
-    const fileInput = document.getElementById("file-input");
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    // 1. Exposure Slider
-    exposureSlider.addEventListener("input", (e) => {
-      stage.exposure = e.target.value;
-      document.getElementById("exposure-val").innerText = e.target.value;
+    // 1. Scene Setup
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0c10);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.2, 3.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 0.8, 0);
+
+    // 2. Lighting Rig
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+
+    // Parent object so we can orbit both lights together
+    const lightRig = new THREE.Group();
+    scene.add(lightRig);
+
+    // Left Light (Signature Purple)
+    const leftLight = new THREE.DirectionalLight(0xa855f7, 6);
+    leftLight.position.set(-3, 2, 2);
+    leftLight.castShadow = true;
+    lightRig.add(leftLight);
+
+    // Right Light (Signature Green)
+    const rightLight = new THREE.DirectionalLight(0x22c55e, 6);
+    rightLight.position.set(3, 2, 2);
+    rightLight.castShadow = true;
+    lightRig.add(rightLight);
+
+    // Back rim light to pop silhouette
+    const backRim = new THREE.DirectionalLight(0xffffff, 1.5);
+    backRim.position.set(0, 3, -3);
+    lightRig.add(backRim);
+
+    // 3. Ground Plane (Catches the colored light bounce like the photo's table)
+    const floorGeo = new THREE.PlaneGeometry(20, 20);
+    const floorMat = new THREE.MeshStandardMaterial({ 
+      color: 0x050608, 
+      roughness: 0.6,
+      metalness: 0.2
     });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
-    // 2. Shadow Depth Slider
-    shadowSlider.addEventListener("input", (e) => {
-      stage.shadowIntensity = e.target.value;
-      document.getElementById("shadow-val").innerText = e.target.value;
-    });
+    // 4. Model Loading
+    const loader = new GLTFLoader();
+    let currentModel = null;
 
-    // 3. Environment Light Rotation Slider
-    lightAngleSlider.addEventListener("input", (e) => {
-      stage.orientation = `0deg 0deg ${e.target.value}deg`;
-    });
+    function loadModelFromURL(url) {
+      if (currentModel) scene.remove(currentModel);
 
-    // 4. Studio Lighting Presets
-    function applyPreset(mode) {
-      if (mode === 'dramatic') {
-        stage.exposure = 0.5;
-        stage.shadowIntensity = 2.0;
-        stage.shadowSoftness = 0.2;
-        exposureSlider.value = 0.5;
-        shadowSlider.value = 2.0;
-      } else if (mode === 'bright') {
-        stage.exposure = 1.6;
-        stage.shadowIntensity = 0.4;
-        stage.shadowSoftness = 1.0;
-        exposureSlider.value = 1.6;
-        shadowSlider.value = 0.4;
-      }
-      document.getElementById("exposure-val").innerText = stage.exposure;
-      document.getElementById("shadow-val").innerText = stage.shadowIntensity;
+      loader.load(url, (gltf) => {
+        currentModel = gltf.scene;
+
+        // Auto-center and scale model properly
+        const box = new THREE.Box3().setFromObject(currentModel);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.6 / maxDim;
+        currentModel.scale.setScalar(scale);
+
+        // Ground it on the floor
+        currentModel.position.x = -center.x * scale;
+        currentModel.position.y = -box.min.y * scale;
+        currentModel.position.z = -center.z * scale;
+
+        // Enable shadows on all meshes
+        currentModel.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        });
+
+        scene.add(currentModel);
+      });
     }
 
-    // 5. On-Demand File Loader (Local .glb files)
-    fileInput.addEventListener("change", (event) => {
-      const file = event.target.files[0];
+    // Load default sample model initially (Public GLB bust/model)
+    loadModelFromURL('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/DamagedHelmet/glTF-Binary/DamagedHelmet.glb');
+
+    // 5. UI Event Listeners
+    document.getElementById('left-color').addEventListener('input', (e) => {
+      leftLight.color.set(e.target.value);
+    });
+    document.getElementById('left-intensity').addEventListener('input', (e) => {
+      leftLight.intensity = parseFloat(e.target.value);
+    });
+
+    document.getElementById('right-color').addEventListener('input', (e) => {
+      rightLight.color.set(e.target.value);
+    });
+    document.getElementById('right-intensity').addEventListener('input', (e) => {
+      rightLight.intensity = parseFloat(e.target.value);
+    });
+
+    document.getElementById('rig-rotation').addEventListener('input', (e) => {
+      lightRig.rotation.y = THREE.MathUtils.degToRad(parseFloat(e.target.value));
+    });
+
+    document.getElementById('ambient-intensity').addEventListener('input', (e) => {
+      ambientLight.intensity = parseFloat(e.target.value);
+    });
+
+    // File input for custom .glb
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
       if (file) {
-        const fileURL = URL.createObjectURL(file);
-        stage.src = fileURL;
+        const url = URL.createObjectURL(file);
+        loadModelFromURL(url);
       }
     });
 
-    // 6. Drag-and-Drop anywhere on screen
-    window.addEventListener("dragover", (e) => e.preventDefault());
-    window.addEventListener("drop", (e) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file && (file.name.endsWith(".glb") || file.name.endsWith(".gltf"))) {
-        const fileURL = URL.createObjectURL(file);
-        stage.src = fileURL;
-      }
+    // Resize handling
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
+
+    // 6. Animation Loop (Raylib style)
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
   </script>
 </body>
 </html>
